@@ -1,0 +1,228 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-sans);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+
+  /* Tokens propios del diseño (no existen en shadcn) */
+  --color-brand: var(--brand);
+  --color-brand-accent: var(--brand-accent);
+  --color-panel: var(--panel);
+  --color-panel-foreground: var(--panel-foreground);
+  --color-field: var(--field);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Animaciones del diseño */
+@theme {
+  --animate-glow: glow 7s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.4s linear infinite;
+  --animate-indeterminate: indeterminate 1.3s ease-in-out infinite;
+  --animate-fade-up: fade-up 0.45s ease;
+
+  @keyframes glow {
+    0%,
+    100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 0.95;
+    }
+  }
+  @keyframes shimmer {
+    0% {
+      background-position: -500px 0;
+    }
+    100% {
+      background-position: 500px 0;
+    }
+  }
+  @keyframes indeterminate {
+    0% {
+      transform: translateX(-120%);
+    }
+    100% {
+      transform: translateX(360%);
+    }
+  }
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+:root {
+  /* Paleta del diseño: bg #f4f4f6 · ink #1d1d20 · muted #86868b · line #e7e7ea · card #fff */
+  --background: #f4f4f6;
+  --foreground: #1d1d20;
+  --card: #ffffff;
+  --card-foreground: #1d1d20;
+  --popover: #ffffff;
+  --popover-foreground: #1d1d20;
+  --primary: #6d5ef0;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f6;
+  --secondary-foreground: #1d1d20;
+  --muted: #eeeef1;
+  --muted-foreground: #86868b;
+  --accent: #f1effe;
+  --accent-foreground: #4b3fd0;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: #e7e7ea;
+  --input: #e7e7ea;
+  --ring: #6d5ef0;
+
+  /* Tokens del diseño */
+  --brand: #6d5ef0;
+  --brand-accent: #3aa0ff;
+  --panel: #141416;
+  --panel-foreground: #ffffff;
+  --field: #fbfbfc;
+
+  /* 11px: el radio de los inputs del mockup; la escala derivada da 15px (botones),
+     24px (tarjetas) y 28px (panel de carga) */
+  --radius: 0.6875rem;
+
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.708 0 0);
+}
+
+.dark {
+  --background: #0d0d0f;
+  --foreground: #f2f2f4;
+  --card: #16161a;
+  --card-foreground: #f2f2f4;
+  --popover: #1b1b21;
+  --popover-foreground: #f2f2f4;
+  --primary: #6d5ef0;
+  --primary-foreground: #ffffff;
+  --secondary: #23232a;
+  --secondary-foreground: #f2f2f4;
+  --muted: #1e1e24;
+  --muted-foreground: #9494a0;
+  --accent: #26262e;
+  --accent-foreground: #f2f2f4;
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: #26262b;
+  --input: #2e2e36;
+  --ring: #6d5ef0;
+
+  /* El panel de carga se eleva sobre el fondo para seguir siendo el protagonista */
+  --brand: #6d5ef0;
+  --brand-accent: #3aa0ff;
+  --panel: #1b1b21;
+  --panel-foreground: #ffffff;
+  --field: #1b1b21;
+
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* Resplandor radial del panel de carga */
+@utility panel-glow {
+  background-image: radial-gradient(
+      55% 80% at 24% 0%,
+      color-mix(in oklab, var(--brand) 50%, transparent),
+      transparent 68%
+    ),
+    radial-gradient(
+      46% 82% at 84% 6%,
+      color-mix(in oklab, var(--brand-accent) 42%, transparent),
+      transparent 70%
+    );
+  filter: blur(34px);
+}
+
+/* Superficie de los esqueletos de carga; se combina con animate-shimmer */
+@utility shimmer-surface {
+  background-image: linear-gradient(
+    90deg,
+    var(--muted) 0%,
+    var(--field) 50%,
+    var(--muted) 100%
+  );
+  background-size: 900px 100%;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
