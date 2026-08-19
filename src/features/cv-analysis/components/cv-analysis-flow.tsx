@@ -9,24 +9,25 @@ import { CvDropzone } from "@/features/cv-analysis/components/cv-dropzone";
 import { CvForm } from "@/features/cv-analysis/components/cv-form";
 import { RejectedFilesAlert } from "@/features/cv-analysis/components/rejected-files-alert";
 import { useCvAnalysis } from "@/features/cv-analysis/hooks/use-cv-analysis";
-import { useCvFiles } from "@/features/cv-analysis/hooks/use-cv-files";
+import { useCvFile } from "@/features/cv-analysis/hooks/use-cv-file";
 
 /**
- * Punto de entrada de cliente de la feature: compone la selección de archivos
- * con la máquina de estados del análisis y decide qué se ve en cada estado.
+ * Punto de entrada de cliente de la feature: compone la selección de archivo con
+ * la máquina de estados del análisis y decide qué se ve en cada estado.
  */
 export function CvAnalysisFlow() {
-  const { files, rejected, addFiles, removeFile, clearFiles, dismissRejected } =
-    useCvFiles();
+  const { file, rejected, selectFile, clearFile, dismissRejected } =
+    useCvFile();
   const { state, analyze, reset } = useCvAnalysis();
 
   const handleAnalyze = () => {
-    void analyze(files.map((selected) => selected.file));
+    if (!file) return;
+    void analyze(file.file);
   };
 
   const handleAnalyzeAnother = () => {
     reset();
-    clearFiles();
+    clearFile();
   };
 
   const renderAnalysis = (): ReactNode => {
@@ -42,7 +43,7 @@ export function CvAnalysisFlow() {
           <AnalysisErrorState
             message={state.message}
             onRetry={handleAnalyze}
-            canRetry={files.length > 0}
+            canRetry={file !== null}
           />
         );
       case "success":
@@ -58,11 +59,10 @@ export function CvAnalysisFlow() {
   return (
     <>
       <CvDropzone
-        files={files}
+        file={file}
         status={state.status}
-        onFilesSelected={addFiles}
-        onRemoveFile={removeFile}
-        onClearFiles={clearFiles}
+        onFilesSelected={selectFile}
+        onRemoveFile={clearFile}
         onAnalyze={handleAnalyze}
       />
 

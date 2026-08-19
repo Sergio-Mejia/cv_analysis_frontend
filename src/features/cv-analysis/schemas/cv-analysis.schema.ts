@@ -21,6 +21,31 @@ import {
  * después, cuando el usuario confirma (`cvFormSchema`).
  */
 
+/** Cuerpo que espera `POST /cv-analysis/presigned-url`. */
+export const presignedUrlRequestSchema = z.object({
+  fileName: z.string().min(1),
+  fileType: z.string().min(1),
+});
+
+export type PresignedUrlRequest = z.infer<typeof presignedUrlRequestSchema>;
+
+/** Respuesta de `POST /cv-analysis/presigned-url`. */
+export const presignedUploadSchema = z.object({
+  /** URL firmada de S3, válida unos minutos, para subir el archivo con PUT. */
+  presignedUrl: z.url(),
+  /** Clave del objeto en S3; es lo que luego se manda a analizar. */
+  key: z.string().min(1),
+});
+
+export type PresignedUpload = z.infer<typeof presignedUploadSchema>;
+
+/** Cuerpo que espera `POST /cv-analysis/analyze`. */
+export const analyzeRequestSchema = z.object({
+  s3Key: z.string().min(1),
+});
+
+export type AnalyzeRequest = z.infer<typeof analyzeRequestSchema>;
+
 /** Texto que puede llegar ausente, nulo o con espacios sobrantes. */
 const text = z
   .string()
@@ -66,18 +91,23 @@ export const cvAnalysisResultSchema = z.object({
   birthDate: text,
   birthPlace: text,
   maritalStatus: text,
+  // Idiomas e intereses sin nombre son ruido de la extracción: no aportan nada
+  // y dejarían el formulario recién prellenado en estado inválido. Se descartan.
+  // En experiencia y educación no se hace: aunque falte el cargo o el título, la
+  // entrada lleva fechas y descripción, y decidir qué hacer con ella es del
+  // usuario.
   languages: lenientList(
     z.object({
       name: text,
       level: z.enum(LANGUAGE_LEVELS).catch(DEFAULT_LANGUAGE_LEVEL),
     }),
-  ),
+  ).transform((items) => items.filter((item) => item.name !== "")),
   interests: lenientList(
     z.object({
       name: text,
       type: z.enum(INTEREST_TYPES).catch(DEFAULT_INTEREST_TYPE),
     }),
-  ),
+  ).transform((items) => items.filter((item) => item.name !== "")),
   experience: lenientList(
     z.object({
       role: text,

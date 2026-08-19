@@ -5,7 +5,7 @@ export function AnalysisEmptyState() {
     <Card className="items-center rounded-3xl border border-dashed border-border px-6 py-14 text-center ring-0">
       <span
         aria-hidden="true"
-        className="mb-4 size-[46px] rounded-full border border-border bg-background"
+        className="mb-4 size-11.5 rounded-full border border-border bg-background"
       />
       <p className="text-base font-semibold">Los resultados aparecerán aquí</p>
       <p className="mt-1.5 text-sm text-muted-foreground">

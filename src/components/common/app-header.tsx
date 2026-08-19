@@ -6,7 +6,7 @@ export function AppHeader() {
       <div className="flex items-center gap-3">
         <span
           aria-hidden="true"
-          className="size-[30px] shrink-0 rounded-md bg-linear-135 from-brand to-brand-accent shadow-lg shadow-brand/40"
+          className="size-7.5 shrink-0 rounded-md bg-linear-135 from-brand to-brand-accent shadow-lg shadow-brand/40"
         />
         <span className="text-base font-semibold tracking-tight">
           Currículum·IA

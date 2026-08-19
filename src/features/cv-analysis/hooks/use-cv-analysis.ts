@@ -9,16 +9,19 @@ import type { CvAnalysisState } from "@/features/cv-analysis/types/cv.types";
 
 export interface UseCvAnalysisResult {
   state: CvAnalysisState;
-  analyze: (files: File[]) => Promise<void>;
+  analyze: (file: File) => Promise<void>;
   reset: () => void;
 }
 
-const UNEXPECTED_ERROR = "Ocurrió un error inesperado al analizar los archivos.";
+const UNEXPECTED_ERROR = "Ocurrió un error inesperado al analizar el archivo.";
 
 /**
  * Orquesta el análisis: una única máquina de estados
  * (`idle → uploading → analyzing → success | error`) en lugar de varios
  * booleanos sueltos que permitirían estados imposibles.
+ *
+ * `uploading` cubre el paso 1 (URL firmada) y el 2 (subida a S3); `analyzing`
+ * empieza cuando el archivo ya está en S3 y el backend lo procesa.
  *
  * Cada intento tiene su propio AbortController y un identificador incremental;
  * si el usuario reintenta o se va de la página, la respuesta que llegue tarde se
@@ -39,9 +42,7 @@ export function useCvAnalysis(): UseCvAnalysisResult {
   useEffect(() => () => cancelPending(), [cancelPending]);
 
   const analyze = useCallback(
-    async (files: File[]) => {
-      if (files.length === 0) return;
-
+    async (file: File) => {
       cancelPending();
 
       const controller = new AbortController();
@@ -53,7 +54,7 @@ export function useCvAnalysis(): UseCvAnalysisResult {
 
       try {
         const result = await analyzeCv({
-          files,
+          file,
           signal: controller.signal,
           onUploadProgress: ({ percent }) => {
             if (isStale()) return;

@@ -10,27 +10,25 @@ import {
 import { cn } from "@/lib/utils";
 
 import { AnalyzeButton } from "@/features/cv-analysis/components/analyze-button";
-import { CvFileList } from "@/features/cv-analysis/components/cv-file-list";
+import { CvSelectedFile } from "@/features/cv-analysis/components/cv-selected-file";
 import type {
   CvAnalysisState,
   SelectedFile,
 } from "@/features/cv-analysis/types/cv.types";
 
 interface CvDropzoneProps {
-  files: SelectedFile[];
+  file: SelectedFile | null;
   status: CvAnalysisState["status"];
   onFilesSelected: (files: FileList | File[]) => void;
-  onRemoveFile: (id: string) => void;
-  onClearFiles: () => void;
+  onRemoveFile: () => void;
   onAnalyze: () => void;
 }
 
 export function CvDropzone({
-  files,
+  file,
   status,
   onFilesSelected,
   onRemoveFile,
-  onClearFiles,
   onAnalyze,
 }: CvDropzoneProps) {
   const [isDragging, setIsDragging] = useState(false);
@@ -58,6 +56,7 @@ export function CvDropzone({
   const handleDrop = (event: DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setIsDragging(false);
+    // Se pueden soltar varios: el hook toma el primero y avisa del resto.
     onFilesSelected(event.dataTransfer.files);
   };
 
@@ -76,7 +75,6 @@ export function CvDropzone({
       <label className="relative block cursor-pointer rounded-3xl border-[1.5px] border-dashed border-panel-foreground/20 px-5 py-9 text-center transition-colors hover:border-panel-foreground/45 hover:bg-panel-foreground/5 has-focus-visible:border-ring has-focus-visible:ring-3 has-focus-visible:ring-ring/50 sm:px-8 sm:py-11">
         <input
           type="file"
-          multiple
           accept={CV_FILE_INPUT_ACCEPT}
           onChange={handleInputChange}
           className="sr-only"
@@ -95,7 +93,7 @@ export function CvDropzone({
         </span>
 
         <span className="block text-xl font-semibold tracking-tight">
-          Arrastra tus archivos aquí
+          Arrastra tu archivo aquí
         </span>
         <span className="mt-1.5 block text-sm text-panel-foreground/60">
           o{" "}
@@ -108,16 +106,10 @@ export function CvDropzone({
         </span>
       </label>
 
-      {files.length > 0 && (
-        <CvFileList
-          files={files}
-          onRemove={onRemoveFile}
-          onClear={onClearFiles}
-        />
-      )}
+      {file && <CvSelectedFile file={file} onRemove={onRemoveFile} />}
 
       <AnalyzeButton
-        fileCount={files.length}
+        hasFile={file !== null}
         status={status}
         onAnalyze={onAnalyze}
       />

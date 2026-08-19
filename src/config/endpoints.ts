@@ -1,12 +1,21 @@
 /**
- * Rutas que consume el cliente. Apuntan a los Route Handlers de esta app, que
- * son los que hablan con el backend de análisis (así la URL y las credenciales
- * del backend nunca llegan al navegador).
+ * Rutas de los Route Handlers de esta app. Son las únicas que conoce el
+ * navegador: la URL y el token del backend nunca salen del servidor.
  */
 export const endpoints = {
   cvAnalysis: {
+    presignedUrl: "/api/cv/presigned-url",
     analyze: "/api/cv/analyze",
-    /** Nombre del campo multipart que transporta los CV; contrato cliente ↔ handler. */
-    filesField: "files",
+  },
+} as const;
+
+/**
+ * Rutas del backend de análisis, relativas a `CV_ANALYSIS_API_URL`. Solo se
+ * usan desde el servidor.
+ */
+export const backendEndpoints = {
+  cvAnalysis: {
+    presignedUrl: "/cv-analysis/presigned-url",
+    analyze: "/cv-analysis/analyze",
   },
 } as const;

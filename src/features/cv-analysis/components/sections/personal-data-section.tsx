@@ -27,10 +27,6 @@ interface PersonalFieldDescriptor {
   full?: boolean;
 }
 
-/**
- * El descriptor vive aquí porque no se usa en ninguna otra parte; es el mismo
- * orden y las mismas etiquetas del diseño.
- */
 const PERSONAL_FIELDS: readonly PersonalFieldDescriptor[] = [
   { name: "firstName", label: "Nombre", placeholder: "Nombre" },
   { name: "lastName", label: "Apellido", placeholder: "Apellido" },
