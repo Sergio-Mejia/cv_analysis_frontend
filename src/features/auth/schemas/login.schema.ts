@@ -32,17 +32,10 @@ export const EMPTY_LOGIN_VALUES: LoginValues = {
   rememberMe: false,
 };
 
-/**
- * Sesión que devuelve el backend al autenticar. Se valida en runtime antes de
- * usarse, igual que el resto de respuestas que cruzan el límite.
+/*
+ * Aquí vivía `authSessionSchema`, que describía una sesión propia con token y
+ * usuario. Ya no aplica: la sesión la emite y custodia Cognito, y quien la lee
+ * es `fetchAuthSession()`, no una respuesta JSON nuestra. Validar en runtime
+ * sigue siendo obligatorio para lo que venga del backend de análisis, pero los
+ * tokens de Cognito los valida el propio SDK.
  */
-export const authSessionSchema = z.object({
-  token: z.string().min(1),
-  user: z.object({
-    id: z.string().min(1),
-    displayName: z.string().min(1),
-    email: z.email(),
-  }),
-});
-
-export type AuthSession = z.infer<typeof authSessionSchema>;

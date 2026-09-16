@@ -41,6 +41,12 @@ interface PostToBackendOptions<T> {
   /** Valida la respuesta antes de reenviarla al navegador. */
   schema: ZodType<T>;
   signal?: AbortSignal;
+  /**
+   * `Authorization` de quien llamó al Route Handler, tal cual llegó. Se reenvía
+   * para que el backend sepa **qué usuario** pide el análisis, no solo que la
+   * petición viene de esta app.
+   */
+  authorization?: string | null;
 }
 
 export async function postToBackend<T>({
@@ -48,6 +54,7 @@ export async function postToBackend<T>({
   body,
   schema,
   signal,
+  authorization = null,
 }: PostToBackendOptions<T>): Promise<T> {
   const { cvAnalysisApiUrl, cvAnalysisApiToken } = getServerEnv();
 
@@ -62,14 +69,26 @@ export async function postToBackend<T>({
   // (`http://host/api`) no pierde ese prefijo.
   const url = `${cvAnalysisApiUrl.replace(/\/+$/, "")}${path}`;
 
+  /*
+   * El token del usuario manda sobre el estático. Solo cabe un `Authorization`,
+   * y de los dos el útil es el que identifica a la persona: con él el backend
+   * puede autorizar por usuario, no solo comprobar que la llamada viene de aquí.
+   *
+   * `CV_ANALYSIS_API_TOKEN` queda como respaldo para poder recorrer el flujo en
+   * local sin Cognito configurado.
+   */
+  const forwardedAuthorization =
+    authorization ??
+    (cvAnalysisApiToken ? `Bearer ${cvAnalysisApiToken}` : null);
+
   let upstream: Response;
   try {
     upstream = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(cvAnalysisApiToken
-          ? { Authorization: `Bearer ${cvAnalysisApiToken}` }
+        ...(forwardedAuthorization
+          ? { Authorization: forwardedAuthorization }
           : {}),
       },
       body: JSON.stringify(body),

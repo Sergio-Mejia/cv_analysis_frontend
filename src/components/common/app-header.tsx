@@ -1,4 +1,5 @@
 import { ThemeToggle } from "@/components/common/theme-toggle";
+import { LogoutButton } from "@/features/auth/components/logout-button";
 
 export function AppHeader() {
   return (
@@ -17,6 +18,9 @@ export function AppHeader() {
         <p className="hidden text-sm text-muted-foreground sm:block">
           Análisis inteligente de hojas de vida
         </p>
+        {/* Se borra solo cuando no hay sesión, así la misma cabecera sirve
+            para el login y para el resto de la app. */}
+        <LogoutButton />
         <ThemeToggle />
       </div>
     </header>

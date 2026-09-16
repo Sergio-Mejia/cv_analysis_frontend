@@ -1,4 +1,5 @@
 import { AppHeader } from "@/components/common/app-header";
+import { RequireGuest } from "@/features/auth/components/require-guest";
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -7,6 +8,9 @@ interface AuthLayoutProps {
 /**
  * Marco de las pantallas de acceso: la misma cabecera del resto de la app sobre
  * el resplandor de marca, con el contenido centrado en el hueco restante.
+ *
+ * `RequireGuest` envuelve solo el contenido y no el marco, para que la cabecera
+ * siga visible mientras se comprueba la sesión.
  */
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
@@ -20,7 +24,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
         <AppHeader />
 
         <main className="flex flex-1 items-center justify-center py-6">
-          {children}
+          <RequireGuest>{children}</RequireGuest>
         </main>
       </div>
     </div>

@@ -10,11 +10,6 @@ import {
   type LoginValues,
 } from "@/features/auth/schemas/login.schema";
 
-/**
- * Registra los componentes de campo del acceso, de modo que cada campo se
- * escriba como `<field.AuthTextField label="…" />` en lugar de repetir el
- * marcado de etiqueta, control y error.
- */
 const { useAppForm } = createFormHook({
   fieldContext,
   formContext,
@@ -27,11 +22,6 @@ export interface UseLoginFormOptions {
   onSubmit: (values: LoginValues) => Promise<void> | void;
 }
 
-/**
- * Fija los genéricos del formulario en un único sitio. Valida en `onBlur` y no
- * en `onChange`: avisar del mínimo de caracteres mientras aún se escribe la
- * contraseña marca en rojo un campo que todavía no está mal.
- */
 export function useLoginForm({
   defaultValues,
   onSubmit,
@@ -45,5 +35,4 @@ export function useLoginForm({
   });
 }
 
-/** Tipo del formulario ya resuelto, para tipar las props de cada sección. */
 export type LoginFormApi = ReturnType<typeof useLoginForm>;

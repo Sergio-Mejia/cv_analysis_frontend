@@ -1,3 +1,4 @@
+import { fetchAuthSession } from "aws-amplify/auth";
 import { z, type ZodType } from "zod";
 
 /**
@@ -30,6 +31,26 @@ const GENERIC_ERROR = "No pudimos completar la petición. Inténtalo de nuevo.";
 
 function abortError(): DOMException {
   return new DOMException("La petición se canceló.", "AbortError");
+}
+
+/**
+ * Token de la sesión actual para firmar las llamadas a nuestros Route Handlers.
+ *
+ * Se lee con el SDK y no con el `getIdToken` de `features/auth` a propósito:
+ * `services/` es capa transversal y no debe depender de una feature — la
+ * dependencia va en el otro sentido. `fetchAuthSession` ya renueva por su cuenta
+ * un token caducado, así que aquí no hay que gestionar el refresco.
+ *
+ * Devuelve `null` en lugar de lanzar: sin sesión la petición sale sin cabecera y
+ * es el servidor quien responde 401, que es donde debe decidirse.
+ */
+async function readIdToken(): Promise<string | null> {
+  try {
+    const session = await fetchAuthSession();
+    return session.tokens?.idToken?.toString() ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /** Extrae el `data` del contenedor `ApiResponse` y lo valida con el schema. */
@@ -86,6 +107,10 @@ interface PostJsonOptions<T> {
  * POST con cuerpo JSON contra un Route Handler propio. Las cancelaciones se
  * propagan tal cual (`AbortError`) para que quien llama pueda distinguirlas de
  * un fallo real; todo lo demás se normaliza a `ApiError`.
+ *
+ * Adjunta el token de la sesión en `Authorization`. Es el único punto por el que
+ * pasan las llamadas a nuestras rutas, así que todas quedan firmadas sin que
+ * cada service tenga que acordarse.
  */
 export async function postJson<T>({
   path,
@@ -93,12 +118,16 @@ export async function postJson<T>({
   schema,
   signal,
 }: PostJsonOptions<T>): Promise<T> {
+  const token = await readIdToken();
   let response: Response;
 
   try {
     response = await fetch(path, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       body: JSON.stringify(body),
       signal,
     });
@@ -131,6 +160,11 @@ interface PutFileOptions {
  *
  * Va con XMLHttpRequest y no con `fetch` porque es la única forma de observar el
  * progreso de subida, que con archivos de hasta 10 MB el usuario nota.
+ *
+ * Aquí **no** se manda `Authorization`, y no es un olvido: la URL ya lleva la
+ * firma de AWS en la query, y añadir una segunda credencial hace que S3 rechace
+ * la subida entera («only one auth mechanism allowed»). Quien autoriza esta
+ * subida es la firma, que emitió el backend en el paso 1 tras comprobar el token.
  */
 export function putFile({
   url,

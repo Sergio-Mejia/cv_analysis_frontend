@@ -2,10 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { ApiError, isAbortError } from "@/services/api-client";
-
-import type { LoginValues } from "@/features/auth/schemas/login.schema";
+import {
+  describeSignInError,
+  describeSignInStep,
+} from "@/features/auth/services/auth-messages";
 import { login } from "@/features/auth/services/auth.service";
+import { setSessionPersistence } from "@/features/auth/services/token-storage";
+import type { LoginValues } from "@/features/auth/schemas/login.schema";
 import type { AuthRequestState } from "@/features/auth/types/auth.types";
 
 export interface UseLoginResult {
@@ -14,67 +17,72 @@ export interface UseLoginResult {
   reset: () => void;
 }
 
-const UNEXPECTED_ERROR = "Ocurrió un error inesperado al iniciar sesión.";
-
 /**
  * Orquesta el acceso: una única máquina de estados
  * (`idle → submitting → success | error`) en lugar de varios booleanos sueltos
  * que permitirían estados imposibles.
  *
- * Cada intento tiene su propio AbortController y un identificador incremental;
- * si el usuario reintenta o se va de la página, la respuesta que llegue tarde se
- * descarta en lugar de sobrescribir el estado actual.
+ * No hay AbortController porque `signIn` de Amplify no acepta señal de
+ * cancelación; lo que sí hay es un identificador incremental, para que la
+ * respuesta de un intento anterior no pise el estado del intento actual, y una
+ * marca de montaje que evita escribir estado en un componente ya desmontado.
  */
 export function useLogin(): UseLoginResult {
   const [state, setState] = useState<AuthRequestState>({ status: "idle" });
-  const controllerRef = useRef<AbortController | null>(null);
   const requestIdRef = useRef(0);
+  const isMountedRef = useRef(true);
 
-  const cancelPending = useCallback(() => {
-    controllerRef.current?.abort();
-    controllerRef.current = null;
-    // Invalida cualquier respuesta que aún esté en vuelo.
-    requestIdRef.current += 1;
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      // Invalida cualquier respuesta que aún esté en vuelo.
+      requestIdRef.current += 1;
+    };
   }, []);
 
-  useEffect(() => () => cancelPending(), [cancelPending]);
+  const submit = useCallback(async (values: LoginValues) => {
+    requestIdRef.current += 1;
+    const requestId = requestIdRef.current;
+    const isStale = () =>
+      !isMountedRef.current || requestId !== requestIdRef.current;
 
-  const submit = useCallback(
-    async (credentials: LoginValues) => {
-      cancelPending();
+    setState({ status: "submitting" });
 
-      const controller = new AbortController();
-      controllerRef.current = controller;
-      const requestId = requestIdRef.current;
-      const isStale = () => requestId !== requestIdRef.current;
+    try {
+      // Antes de autenticar, porque decide cómo se guarda el token que emite
+      // `signIn`.
+      setSessionPersistence(values.rememberMe);
 
-      setState({ status: "submitting" });
+      const output = await login(values.identifier.trim(), values.password);
 
-      try {
-        const session = await login({
-          credentials,
-          signal: controller.signal,
-        });
+      if (isStale()) return;
 
-        if (isStale()) return;
-        setState({ status: "success", session });
-      } catch (error) {
-        if (isStale() || isAbortError(error)) return;
+      if (!output.isSignedIn) {
         setState({
           status: "error",
-          message: error instanceof ApiError ? error.message : UNEXPECTED_ERROR,
+          message: describeSignInStep(output.nextStep.signInStep),
         });
-      } finally {
-        if (controllerRef.current === controller) controllerRef.current = null;
+        return;
       }
-    },
-    [cancelPending],
-  );
+
+      setState({ status: "success" });
+    } catch (error) {
+      if (isStale()) return;
+
+      if (error instanceof Error && error.name === "UserAlreadyAuthenticatedException") {
+        setState({ status: "success" });
+        return;
+      }
+
+      setState({ status: "error", message: describeSignInError(error) });
+    }
+  }, []);
 
   const reset = useCallback(() => {
-    cancelPending();
+    requestIdRef.current += 1;
     setState({ status: "idle" });
-  }, [cancelPending]);
+  }, []);
 
   return { state, submit, reset };
 }

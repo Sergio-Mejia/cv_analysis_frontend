@@ -4,6 +4,7 @@ import {
   cvAnalysisResultSchema,
 } from "@/features/cv-analysis/schemas/cv-analysis.schema";
 import { postToBackend } from "@/services/backend-client";
+import { readAuthorization } from "@/services/request-auth";
 
 import { fail, failFromBackend, ok } from "../response";
 
@@ -14,6 +15,14 @@ import { fail, failFromBackend, ok } from "../response";
  * subió el navegador directamente a S3 en el paso 2.
  */
 export async function POST(request: Request) {
+  // El middleware ya filtra por cookie, pero una cookie se falsifica y el token
+  // no: el handler exige el bearer por su cuenta en vez de fiarse de la capa
+  // anterior.
+  const authorization = readAuthorization(request);
+  if (authorization === null) {
+    return fail("Necesitas iniciar sesión para analizar una hoja de vida.", 401);
+  }
+
   let payload: unknown;
   try {
     payload = await request.json();
@@ -32,6 +41,7 @@ export async function POST(request: Request) {
       body: parsed.data,
       schema: cvAnalysisResultSchema,
       signal: request.signal,
+      authorization,
     });
     return ok(result);
   } catch (error) {

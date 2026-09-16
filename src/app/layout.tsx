@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
+import { ConfigureAmplify } from "@/components/common/configure-amplify";
 import { ThemeProvider } from "@/components/common/theme-provider";
+import { AuthProvider } from "@/features/auth/components/auth-provider";
 import "@/styles/globals.css";
 
 const geistSans = Geist({
@@ -32,7 +34,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ConfigureAmplify />
+        <ThemeProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

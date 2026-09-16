@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect } from "react";
 
 import { Spinner } from "@/components/common/spinner";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 
 import { AuthCard } from "@/features/auth/components/auth-card";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useLogin } from "@/features/auth/hooks/use-login";
 import { useLoginForm } from "@/features/auth/hooks/use-login-form";
 import {
@@ -26,13 +28,25 @@ function AuthBrandMark() {
 
 export function LoginForm() {
   const { state, submit, reset } = useLogin();
+  const { refresh } = useAuth();
 
   const form = useLoginForm({
     defaultValues: EMPTY_LOGIN_VALUES,
     onSubmit: (values) => submit(values),
   });
 
+  /*
+   * Al entrar, Amplify emite `signedIn` por el Hub y el proveedor se actualiza
+   * solo; `refresh` lo fuerza igualmente para no depender de ese evento. Una vez
+   * el estado pasa a `authenticated`, es `RequireGuest` quien saca de aquí.
+   */
+  useEffect(() => {
+    if (state.status === "success") void refresh();
+  }, [state.status, refresh]);
+
   const isSubmitting = state.status === "submitting";
+  // Tras entrar, el formulario queda bloqueado hasta que la redirección ocurre.
+  const isPending = isSubmitting || state.status === "success";
 
   return (
     <AuthCard
@@ -44,7 +58,6 @@ export function LoginForm() {
         noValidate
         onSubmit={(event) => {
           event.preventDefault();
-          // Un intento nuevo no debe arrastrar el error del anterior.
           if (state.status === "error") reset();
           void form.handleSubmit();
         }}
@@ -56,7 +69,7 @@ export function LoginForm() {
               label="Usuario o correo"
               placeholder="nombre@correo.com"
               autoComplete="username"
-              disabled={isSubmitting}
+              disabled={isPending}
             />
           )}
         </form.AppField>
@@ -68,7 +81,7 @@ export function LoginForm() {
               type="password"
               placeholder={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
               autoComplete="current-password"
-              disabled={isSubmitting}
+              disabled={isPending}
             />
           )}
         </form.AppField>
@@ -77,7 +90,7 @@ export function LoginForm() {
           {(field) => (
             <field.AuthCheckboxField
               label="Mantener la sesión abierta"
-              disabled={isSubmitting}
+              disabled={isPending}
               className="pt-0.5"
             />
           )}
@@ -91,11 +104,11 @@ export function LoginForm() {
 
         <Button
           type="submit"
-          disabled={isSubmitting}
+          disabled={isPending}
           className="mt-1 h-12 w-full gap-2.5 rounded-xl bg-linear-135 from-brand to-brand-accent px-6 text-base font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
         >
-          {isSubmitting && <Spinner />}
-          {isSubmitting ? "Iniciando sesión…" : "Iniciar sesión"}
+          {isPending && <Spinner />}
+          {isPending ? "Iniciando sesión…" : "Iniciar sesión"}
         </Button>
       </form>
 
